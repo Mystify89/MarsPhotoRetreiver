@@ -7,10 +7,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.FileChannel;
+import java.nio.channels.Channels;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
@@ -19,11 +24,14 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.imageio.ImageIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 import api.NasaPhotoResponse;
 import api.Photo;
@@ -44,9 +52,52 @@ public class MarsPhotosRetriever {
     }
 
     public void downloadImage(String imagePath, String destination) throws IOException {
-        LOG.info("Downloading image from: " + imagePath);
-        try (InputStream in = new URL(imagePath).openStream()) {
-            Files.copy(in, Paths.get(destination), StandardCopyOption.REPLACE_EXISTING);
+        LOG.info("Downloading image from: '" + imagePath + "'");
+        //try (InputStream in = new URL(imagePath).openStream()) {
+        //    Files.copy(in, Paths.get(destination), StandardCopyOption.REPLACE_EXISTING);
+        //}
+
+        URL resourceUrl, base, next;
+        Map<String, Integer> visited = new HashMap<>();
+        HttpURLConnection conn;
+        String location;
+        int times;
+        String url = imagePath;
+
+        while (true) {
+            times = visited.compute(url, (key, count) -> count == null ? 1 : count + 1);
+
+            if (times > 3) {
+                throw new IOException("Stuck in redirect loop");
+            }
+            resourceUrl = new URL(url);
+            conn        = (HttpURLConnection) resourceUrl.openConnection();
+
+            conn.setConnectTimeout(15000);
+            conn.setReadTimeout(15000);
+            conn.setInstanceFollowRedirects(false);   // Make the logic below easier to detect redirections
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0...");
+
+            switch (conn.getResponseCode())
+            {
+                case HttpURLConnection.HTTP_MOVED_PERM:
+                case HttpURLConnection.HTTP_MOVED_TEMP:
+                    location = conn.getHeaderField("Location");
+                    location = URLDecoder.decode(location, "UTF-8");
+                    base     = new URL(url);
+                    next     = new URL(base, location);  // Deal with relative URLs
+                    url      = next.toExternalForm();
+                    continue;
+            }
+
+            break;
+        }
+
+        try (ReadableByteChannel readChannel = Channels.newChannel(conn.getInputStream());
+             FileOutputStream fileOS = new FileOutputStream(destination)) {
+            FileChannel writeChannel = fileOS.getChannel();
+            writeChannel
+                    .transferFrom(readChannel, 0, Long.MAX_VALUE);
         }
     }
 
