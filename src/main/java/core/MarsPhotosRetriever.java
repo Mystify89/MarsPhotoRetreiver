@@ -44,7 +44,7 @@ public class MarsPhotosRetriever {
     }
 
     public void downloadImage(String imagePath, String destination) throws IOException {
-        System.out.println(imagePath);
+        LOG.info("Downloading image from: " + imagePath);
         try (InputStream in = new URL(imagePath).openStream()) {
             Files.copy(in, Paths.get(destination), StandardCopyOption.REPLACE_EXISTING);
         }
