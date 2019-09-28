@@ -36,6 +36,9 @@ import org.slf4j.LoggerFactory;
 import api.NasaPhotoResponse;
 import api.Photo;
 
+/**
+ * Handles the access to NASA servers, enabling the download of both the image listings and the actual image files
+ */
 public class MarsPhotosRetriever {
     private static final String API_KEY =  "Rx0Se5XJa2gOHG5L2O4dBxaUKJt5prJOaofmuX4s";
     private static final String MARS_PHOTOS_URL = "https://api.nasa.gov/mars-photos/api/v1/rovers/%s/" +
@@ -51,11 +54,14 @@ public class MarsPhotosRetriever {
         restClient = new RestClient();
     }
 
+    /**
+     * Download the given image from its URL to the specified file
+     * @param imagePath the URL to the image
+     * @param destination the file location to download to
+     * @throws IOException if there is an IO issue
+     */
     public void downloadImage(String imagePath, String destination) throws IOException {
         LOG.info("Downloading image from: '" + imagePath + "'");
-        //try (InputStream in = new URL(imagePath).openStream()) {
-        //    Files.copy(in, Paths.get(destination), StandardCopyOption.REPLACE_EXISTING);
-        //}
 
         URL resourceUrl, base, next;
         Map<String, Integer> visited = new HashMap<>();
@@ -101,6 +107,12 @@ public class MarsPhotosRetriever {
         }
     }
 
+    /**
+     * Finds all of the photos taken on a given date. Checks all rovers, and automatically scrolls through the pages
+     * if nessecary.
+     * @param date the date to query
+     * @return the list of Photos
+     */
     public List<Photo> retrievePhotosForDate(LocalDate date) {
         List<Photo> allPhotos = new ArrayList<>();
         for (Rover rover: EnumSet.allOf(Rover.class)) {

@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
+/**
+ * Represents the information about a rover as sent by NASA
+ */
 public class RoverStruct {
     private final String id;
     private final String name;

@@ -3,6 +3,9 @@ package api;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Represents the information about a Photo as sent by NASA
+ */
 public class Photo {
     private final String id;
     private final int sol;

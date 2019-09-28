@@ -17,6 +17,9 @@ import api.Photo;
 import api.PhotosResponse;
 import core.MarsPhotosRetriever;
 
+/**
+ * Rest controller for photo requests
+ */
 @RestController
 @RequestMapping("/api/photos")
 public class PhotosController {
@@ -44,10 +47,12 @@ public class PhotosController {
                 }
                 photoCount++;
             }
-            return new PhotosResponse(photoList.size(), photoCount, true, null);
+            return new PhotosResponse(photoList.size(), photoCount, true, null,
+                    outputDirectory.getAbsolutePath());
         } catch (Exception e) {
             LOG.error("Error: ", e);
-            return new PhotosResponse(0, 0, false, e.getMessage());
+            return new PhotosResponse(0, 0, false, e.getMessage(),
+                    "");
         }
     }
 

@@ -3,6 +3,9 @@ package api;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+/**
+ * Represents NASA's camera json structure.
+ */
 public class Camera {
     private final String id;
     private final String name;
